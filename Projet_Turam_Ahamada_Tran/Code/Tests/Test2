@@ -1,0 +1,18 @@
+public class Test2 {
+	public static void main(String[] args)
+	{
+		PageId a = new PageId(1,6);
+		byte[] buff = {20,30};
+		
+		DiskManager.getInstance().CreateFile(a.getFileIdx());
+		DiskManager.getInstance().AddPage(a.getFileIdx());
+		/*BufferManager.getInstance().GetPage(a);
+		BufferManager.getInstance().GetPage(a);
+		BufferManager.getInstance().GetPage(a);
+		BufferManager.getInstance().GetPage(a);
+		BufferManager.getInstance().GetPage(a);*/
+		//BufferManager.getInstance().FreePage(a, false);
+		BufferManager.getInstance().FlushAll();
+		DiskManager.getInstance().ReadPage(a, buff);
+	}
+}
