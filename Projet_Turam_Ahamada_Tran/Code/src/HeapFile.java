@@ -1,7 +1,5 @@
 package manager;
 
-import java.nio.Buffer;
-
 public class HeapFile {
     RelDef relDef;
 
@@ -10,8 +8,9 @@ public class HeapFile {
     }
 
     public void createNewOnDisk(){
-        DiskManager.getInstance().CreateFile(relDef.getFileIdx());
-        PageId pageid = DiskManager.getInstance().AddPage(relDef.getFileIdx());
+        DiskManager.getInstance().CreateFile(RelDef.getFileIdx());
+        DiskManager.getInstance();
+		PageId pageid = DiskManager.AddPage(RelDef.getFileIdx());
         byte[] buff = BufferManager.getInstance().GetPage(pageid);
         for(int i =0;i<Constants.pageSize;i++){
             buff[i]=0;
@@ -20,42 +19,53 @@ public class HeapFile {
     }
 
     // pageId addDataPage()
+    public PageId addDataPage()
+    {
+    	DiskManager.getInstance();
+		PageId pageid = DiskManager.AddPage(RelDef.getFileIdx());
+        byte[] buff = BufferManager.getInstance().GetPage(pageid);
+    	
+    	buff[RelDef.getFileIdx()] = 1;
+    	buff[buff.length]++;
+    	BufferManager.getInstance().FreePage(pageid, false);
+    	
+    	return pageid;
+    }
 
     public PageId getFreeData(){
-        PageId pageid = DiskManager.getInstance().addPage(relDef.getFileIdx());
-        byte[] buff = BufferManager.getInstance().getPage(pageid);
+        DiskManager.getInstance();
+		PageId pageid = DiskManager.AddPage(RelDef.getFileIdx());
+        byte[] buff = BufferManager.getInstance().GetPage(pageid);
         boolean freedata = false;
         for(int i=0;i<Constants.pageSize;i++){
             int nb = 0;
             if(buff[i]==0)nb++;
             if(nb==Constants.pageSize)freedata=true;
         }
-        BufferManager.getInstance().freePage(pageid,false);
+        BufferManager.getInstance().FreePage(pageid,false);
         if(freedata) return pageid;
         else return null;
     }
-    
     public Rid writeRecordToDataPage(Record record,PageId pageid){
-        byte[] buff = BufferManager.getInstance().getPage(pageid);
+        byte[] buff = BufferManager.getInstance().GetPage(pageid);
         int pos=0;
         for(int i=0;i<Constants.pageSize;i++){
             if(buff[i]==0){
                 pos=i;
-                i=Constants.pageSize;
+                i=(int) Constants.pageSize;
             }
         }
         record.writeToBuffer(buff,pos);
-        BufferManager.getInstance().freePage(pageid,true);
+        BufferManager.getInstance().FreePage(pageid,true);
         // acutaliser headerpage car nb de page dispo a changé
         // c'est a dire dans le fichier de la pageid faire -- au deuxième N
         Rid rid = new Rid(pageid,pos);
         return rid;
     }
-    
     public Record[] getRecordsInDataPage (PageId pageid){
-        byte[] buff = BufferManager.getInstance().getPage(pageid);
+        byte[] buff = BufferManager.getInstance().GetPage(pageid);
         int count = 0;
-        Record[] record = new Record[Constants.pageSize];
+        Record[] record = new Record[(int) Constants.pageSize];
         for(int i=0;i<Constants.pageSize;i++){
             if(buff[i]!=0){
                 record[count].readFromBuffer(buff,i);
@@ -63,16 +73,16 @@ public class HeapFile {
             }
         }
 
-        BufferManager.getInstance().freePage(pageid,false);
+        BufferManager.getInstance().FreePage(pageid,false);
         return record;
     }
 
-    public Rid insertRecord (Record record){
-        PageId pageid = ;
+    public Rid InsertRecord (Record record){
+    	DiskManager.getInstance();
         // page libre
+    	PageId pageid = getFreeData();
         Rid rid = writeRecordToDataPage(record,pageid);
         return rid;
-    }
     
     public Record[] getAllRecords (){
         // recuperer les infos de la headerpage
